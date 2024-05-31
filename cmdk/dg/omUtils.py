@@ -56,6 +56,16 @@ def UUIDExists(uuid: str | om2.MUuid) -> bool:
         return uuid.valid()
     return False
     
+def createNode(nodeType, nodeName):
+    if nodeType == 'locator':
+        return cmds.spaceLocator(n=nodeName)[0]
+    return cmds.createNode(nodeType, n=nodeName)
+    
+
+def isDagNode(nodeName: str) -> bool:
+    if toMObject(nodeName).hasFn(om2.MFn.kDagNode):
+        return True
+    return False
 
         
 
