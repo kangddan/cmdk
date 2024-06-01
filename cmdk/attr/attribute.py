@@ -81,6 +81,9 @@ class Attribute(object):
             
     def __repr__(self):
         return '<{}.{}>'.format(self.__class__.__name__, self.fullPath)
+    
+    def __str__(self):
+        return self.fullPath
         
     def __lshift__(self, other):
         other.connect(self)
@@ -139,6 +142,7 @@ class Attribute(object):
         if Attribute.isMessage(self.attr, self.node.fullPath):
             from cmdk.dg.depNode import DepNode
             from cmdk.dag.dagNode import DagNode
+            
             if Attribute.isMessage(self.attr, self.node.fullPath, multi=True): # is multi attr
                 nodes = cmds.listConnections(self.fullPath) or []
                 return [DagNode(node) if omUtils.isDagNode(node) else DepNode(node) for node in nodes]
@@ -149,7 +153,7 @@ class Attribute(object):
                 nodes = cmds.listConnections(self.fullPath, d=False) # output message
                 if nodes is None: 
                     return
-            return DepNode(nodes[0])
+            return DagNode(nodes[0]) if omUtils.isDagNode(nodes[0]) else DepNode(nodes[0])
         # message -----------------------------------------------------------------
         
         '''

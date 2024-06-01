@@ -216,7 +216,7 @@ class DepNode(object):
     """
 
 if __name__ == '__main__':
-    testNode = DepNode('testNode', 'joint')
+    testNode = DepNode('testNode')
     testNode.attr
     #testNode.attr.tx = 15
     
