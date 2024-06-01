@@ -1,7 +1,8 @@
 import maya.cmds as cmds
-from cmdk.dag.dagNode import DagNode
-from cmdk.dg.depNode import DepNode
 from cmdk.dg.omUtils import isDagNode
+from cmdk.dg.depNode import DepNode
+from cmdk.dag.dagNode import DagNode
+
 
 
 def createDagNode(typ, name):

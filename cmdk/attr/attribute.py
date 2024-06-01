@@ -1,7 +1,7 @@
 import maya.cmds as cmds
 import maya.api.OpenMaya as om2
 import cmdk.dg.omUtils as omUtils
-
+from cmdk.attr.get import GetAttribute
 
 class Attr(object):
     
@@ -137,7 +137,9 @@ class Attribute(object):
         
         if not self.exists(): 
             return om2.MGlobal.displayError('Invalid Attribute: {}'.format(self.fullPath))
-            
+        
+        return GetAttribute(self.node.fullPath, self.attr).run()
+        """
         # message -----------------------------------------------------------------
         if Attribute.isMessage(self.attr, self.node.fullPath):
             from cmdk.dg.depNode import DepNode
@@ -148,11 +150,14 @@ class Attribute(object):
                 return [DagNode(node) if omUtils.isDagNode(node) else DepNode(node) for node in nodes]
                 
             # ---------------------------------------------------    
-            nodes = cmds.listConnections(self.fullPath, s=False)     # input message
-            if nodes is None: 
-                nodes = cmds.listConnections(self.fullPath, d=False) # output message
-                if nodes is None: 
-                    return
+            # nodes = cmds.listConnections(self.fullPath, s=False)     # input message
+            # if nodes is None: 
+            #     nodes = cmds.listConnections(self.fullPath, d=False) # output message
+            #     if nodes is None: 
+            #         return
+            nodes = cmds.listConnections(self.fullPath, s=False) or cmds.listConnections(self.fullPath, d=False)
+            if not nodes:
+                return
             return DagNode(nodes[0]) if omUtils.isDagNode(nodes[0]) else DepNode(nodes[0])
         # message -----------------------------------------------------------------
         
@@ -203,6 +208,7 @@ class Attribute(object):
             values = [cmds.getAttr('{0}[{1}]'.format(self.fullPath, index), *args, **kwargs) for index in range(length)]
             return values[0] if len(values) == 1 else values
         '''
+        """
                
     def set(self, *args, **kwargs):
         if not self.exists(): 
