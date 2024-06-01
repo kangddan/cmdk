@@ -3,70 +3,11 @@ import maya.api.OpenMaya as om2
 import cmdk.dg.omUtils as omUtils
 from cmdk.attr.get import GetAttribute
 
-class Attr(object):
-    
-    def __init__(self, node):
-        self.__dict__['_IS_INITIALIZED_'] = False 
-        self.node = node
-        self.__dict__['_IS_INITIALIZED_'] = True 
-        
-    def __repr__(self):
-        return '<{0}.{1}>'.format(
-            self.__class__.__name__,
-            self.node.fullPath)
-    
-    def __getattr__(self, attr):
-
-        return self.__dict__.get(attr, Attribute(self.node, attr))
-
-    def __setattr__(self, attr, value):
-
-        if self._IS_INITIALIZED_ and attr not in self.__dict__:
-            getattr(self, attr).set(value)
-        else:
-            object.__setattr__(self, attr, value)
-            
-    def __getitem__(self, attr):
-        return self.__getattr__(attr)
-
-
-    def __setitem__(self, attr, value):
-        self.__setattr__(attr, value)
- 
-    # -----------------------------------------------------------------------
-    
-    def listAttr(self, **kwargs):
-        return [Attribute(self.node, attr) for attr in cmds.listAttr(self.node.fullPath, **kwargs) or []]
-                
-    def addAttr(self, attrName='', **kwargs):
-        '''
-        add attr / longName: str
-        attributeType: str / dataType: str
-        '''
-        cmds.addAttr(self.node.fullPath, ln=attrName, **kwargs)
-        return Attribute(self.node, attrName)
-
-        
-    def allConnections(self, **kwargs) -> list['self'] | None:
-        from cmdk.dg.depNode import DepNode
-        from cmdk.dag.dagNode import DagNode
-        '''
-        Why use snc=True? 
-        This will avoid returning unitConversion nodes
-        as calling the delete() method will automatically delete them
-        '''
-        nodes = cmds.listConnections(self.node.fullPath, scn=True, **kwargs) or []
-        if not nodes: return
-        return [DagNode(node) if omUtils.isDagNode(node) else DepNode(node) for node in nodes]
-
-        
         
 class Attribute(object):
     def __init__(self, node, attr):
         self.node = node
         self.attr = attr
-
-        #self.attrName = '{}.{}'.format(node.fullPath, attr)
     
     # --------------------------------------------------------------------
     
@@ -80,7 +21,7 @@ class Attribute(object):
         self.__getitem__(index).set(value)
             
     def __repr__(self):
-        return '<{}.{}>'.format(self.__class__.__name__, self.fullPath)
+        return '<{}.{}>'.format(Attribute, self.fullPath)
     
     def __str__(self):
         return self.fullPath
@@ -107,31 +48,6 @@ class Attribute(object):
     def name(self) -> str:
         return '{}.{}'.format(self.node.name, self.attr)
         
-    # message attr ------------------------------------------------------------
-    @staticmethod
-    def isMessage(attrName: str, node: str, multi: bool =False) -> bool:
-        '''
-        if not cmds.objExists('{}.{}'.format(node, attrName)):
-            return False
-        _attrName = attrName.split('.')[-1].split('[')[0]
-        _isMessage = cmds.attributeQuery(_attrName, node=node, message=True)
-        # ----------------------------------------------------------------
-        if not _isMessage: return False
-        if not multi: return True
-        # ----------------------------------------------------------------
-        subAttr = cmds.listAttr('{}.{}'.format(node, attrName), multi=True) or []
-        if len(subAttr) > 1:
-            return True
-        return False
-        '''
-        _isMessage = cmds.getAttr('{}.{}'.format(node, attrName), typ=True) == 'message'
-        if not _isMessage: return False
-        if not multi: return True
-        if cmds.getAttr('{}.{}'.format(node, attrName), s=True) > 1:
-            return True
-        return False
-
-    # message attr ------------------------------------------------------------
     
     def get(self, *args, **kwargs):
         
@@ -257,12 +173,8 @@ class Attribute(object):
     def query(self, **kwargs):
         '''
         attributeQuery cannot query attributes with indices, 
-        it is necessary to first check for the existence of indexed attributes using objExists. 
-        attributeQuery is primarily responsible for checking 
-        whether an attribute is a multi attr and whether it is an message attr.
         '''
         _attrName = self.attr.split('.')[-1].split('[')[0]
-        #_attrName = self.attr.split('[')[0]
         return cmds.attributeQuery(_attrName, node=self.node.fullPath, **kwargs)
         
     def delete(self):

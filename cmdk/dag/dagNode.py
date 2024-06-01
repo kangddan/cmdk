@@ -5,7 +5,8 @@ from cmdk.dg.depNode import DepNode
 class DagNode(DepNode):
     
     def __init__(self, nodeName :str = '', nodeType :str = ''):
-        super(DagNode, self).__init__(nodeName, nodeType)
+        #super(DagNode, self).__init__(nodeName, nodeType)
+        super().__init__(nodeName, nodeType)
         
     def setVisibility(self, Value):
         if self.exists():
@@ -70,7 +71,7 @@ class DagNode(DepNode):
     
     def parentTo(self, item):
         #item = item.fullPath if isinstance(item, self.__class__) else item
-        cmds.parent(self.fullPath, item)
+        cmds.parent(self.fullPath, str(item))
         
     def parentToWorld(self):
         cmds.parent(self.fullPath, w=True)
@@ -92,13 +93,13 @@ class DagNode(DepNode):
     
         
         
-if __name__ == '__main__':
-    testNode = DagNode('pCube1')
-    testNode2 = DagNode('pSphere1')
+# if __name__ == '__main__':
+#     testNode = DagNode('pCube1')
+#     testNode2 = DagNode('pSphere1')
 
-    testNode.parentTo(testNode2)
-    testNode.attr.addAttr('metaParent', at='message')
-    testNode.attr.metaParent.delete()
+#     testNode.parentTo(testNode2)
+#     testNode.attr.addAttr('metaParent', at='message')
+#     testNode.attr.metaParent.delete()
 
 
 

@@ -29,8 +29,10 @@ class GetAttribute(object):
     def isMessage(self) -> bool:
         return cmds.getAttr(self.fullPath, typ=True) == 'message'
     
-        
-    # message -----------------------------------------------------------------------------------------------
+    
+    
+    # attrTypes ---------------------------------------------------------------------------------------------    
+    # message   ---------------------------------------------------------------------------------------------
     @property
     def messageData(self):
         from cmdk.dg.depNode  import DepNode
@@ -51,12 +53,13 @@ class GetAttribute(object):
         if self.isMessage:
             return self.messageData
         
+        print('getaabbccdd')
         return cmds.getAttr(self.fullPath)
             
         
         
-if __name__ == '__main__':
-    a = GetAttribute('joint1', 'tx'); a.run()
+# if __name__ == '__main__':
+#     a = GetAttribute('joint1', 'tx'); a.run()
 
 
 #cmds.getAttr('sb.boundingBoxMin', typ=True) 

@@ -1,19 +1,20 @@
 import maya.cmds as cmds
 import maya.api.OpenMaya as om2
 import cmdk.dg.omUtils as omUtils
-#from cmdk.attr.attribute import Attribute
-from cmdk.attr.attribute import Attr
+from cmdk.attr.attribute import Attribute
+
 
 class DepNode(object):
     _NODETYPE = cmds.allNodeTypes()
     _CACHE    = {}
     
+    
     def __new__(cls, *args, **kwargs) -> 'self':
-        nodeName = args[0] if len(args) > 0 else kwargs.get('nodeName')
+        nodeName = kwargs.get('nodeName', args[0] if args else None)
         if not isinstance(nodeName, str):
             raise ValueError('The nodeName must be a string')
         
-        nodeType = args[1] if len(args) > 1 else kwargs.get('nodeType')
+        nodeType = kwargs.get('nodeType', args[1] if len(args) > 1 else None)
         if nodeType and nodeType not in cls._NODETYPE:
             raise ValueError('NodeType error')
         
@@ -21,13 +22,17 @@ class DepNode(object):
             uuid = omUtils.getUUID(nodeName)
             if omUtils.UUIDExists(uuid) and uuid in cls._CACHE:
                 return cls._CACHE[uuid]
-
-        return super(DepNode, cls).__new__(cls)
+        
+        '''
+        To avoid errors caused by reloading
+        '''
+        #return super(DepNode, cls).__new__(cls)
+        return super().__new__(cls) 
             
     
     def __init__(self, nodeName :str = '', nodeType :str = ''):
         if not hasattr(self, '_initOk_'):
-            #self.__dict__['_IS_INITIALIZED_'] = False 
+            self.__dict__['_IS_INITIALIZED_'] = False  
             
             self.node = nodeName
             if not self.exists() and nodeType:
@@ -41,7 +46,7 @@ class DepNode(object):
                 DepNode._CACHE[self.uuid] = self
             self._initOk_ = True
             
-            #self.__dict__['_IS_INITIALIZED_'] = True 
+            self.__dict__['_IS_INITIALIZED_'] = True 
 
     
     def __repr__(self) -> str:
@@ -61,10 +66,6 @@ class DepNode(object):
         if not fullPath:
             return om2.MGlobal.displayWarning('INVALID OBJECT')
         return fullPath
-        # try:
-        #     return omUtils.getNodeNameFromUUID(self._instanceUUID)
-        # except:
-        #     return 'Invalid Object'
             
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -101,20 +102,20 @@ class DepNode(object):
         return self._apiNode
         
     def exists(self) -> bool:
-        if self.fullPath and cmds.objExists(self.fullPath):
-            return True
-        return False
+        return self.fullPath and cmds.objExists(self.fullPath)
         
     # -----------------------------------------------------------
-    @property
-    def attr(self):
-        return Attr(self)
     
-    """
     def __getattr__(self, attr):
         if attr == '_initOk_':
             raise AttributeError
-        return self.__dict__.get(attr, Attribute(self, attr))
+            
+        '''
+        When calling the delete() method, self._apiNode is None
+        so when dynamically generating attribute classes
+        we should check whether the object has been deleted to avoid recursion
+        '''
+        return self.__dict__.get(attr, Attribute(self, attr) if self._apiNode else None)
 
     def __setattr__(self, attr, value):
         '''
@@ -132,7 +133,7 @@ class DepNode(object):
 
     def __setitem__(self, attr, value):
         self.__setattr__(attr, value)
-    """
+
     
     # -----------------------------------------------------------
     @property
@@ -149,6 +150,7 @@ class DepNode(object):
                     if isinstance(self._apiNode, om2.MDagPath) 
                     else self._apiNode.name())        
         return None
+    
         
     @property
     def name(self) -> str | None:
@@ -160,10 +162,7 @@ class DepNode(object):
     
     @property
     def type(self) -> str:
-        try:
-            return cmds.objectType(self.fullPath)
-        except:
-            return 'No Type'
+        return cmds.objectType(self.fullPath) if self.exists() else 'No Type'
     
     @property    
     def uuid(self) -> str:
@@ -190,15 +189,11 @@ class DepNode(object):
         self._apiNode = None 
         
     # -------------------------------------------------------------------------------------------
-    """
+
     def listAttr(self, **kwargs):
         return [Attribute(self, attr) for attr in cmds.listAttr(self.fullPath, **kwargs) or []]
                 
     def addAttr(self, attrName='', **kwargs):
-        '''
-        add attr / longName: str
-        attributeType: str / dataType: str
-        '''
         cmds.addAttr(self.fullPath, ln=attrName, **kwargs)
         return Attribute(self, attrName)
 
@@ -213,37 +208,16 @@ class DepNode(object):
         nodes = cmds.listConnections(self.fullPath, scn=True, **kwargs) or []
         if not nodes: return
         return [DagNode(node) if omUtils.isDagNode(node) else DepNode(node) for node in nodes]
-    """
+
 
 if __name__ == '__main__':
-    testNode = DepNode('testNode')
-    testNode.attr
-    #testNode.attr.tx = 15
+    testNode = DepNode('sb', 'joint')
+    testNode.apiNode
+    testNode.tx.get()
+    
+    testNode.__dict__
+    testNode.delete()
+    testNode.exists()
+
     
 
-
-
-
-
-
-
-
-
- 
-
-
-
-        
-
-
-
-
-
-
-
-
-
-
-
-
-        
