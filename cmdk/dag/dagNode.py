@@ -18,7 +18,6 @@ class DagNode(DepNode):
     def hide(self):
         self.setVisibility(False)
 
-        
     @property
     def shape(self):
         '''
@@ -47,7 +46,7 @@ class DagNode(DepNode):
         return children
         
     @property
-    def allChildrens(self):
+    def allChildren(self):
         return [DagNode(child) 
                 for child in cmds.listRelatives(self.fullPath, ad=True, f=True, ni=True) 
                 or []]
@@ -70,7 +69,6 @@ class DagNode(DepNode):
     # --------------------------------------------------------
     
     def parentTo(self, item):
-        #item = item.fullPath if isinstance(item, self.__class__) else item
         cmds.parent(self.fullPath, str(item))
         
     def parentToWorld(self):
@@ -88,8 +86,7 @@ class DagNode(DepNode):
             
     # --------------------------------------------------------
     def moveTo(self, item, **kwargs):
-        #item = item.fullPath if isinstance(item, self.__class__) else item
-        cmds.matchTransform(self.fullPath, item, **kwargs)
+        cmds.matchTransform(self.fullPath, str(item), **kwargs)
     
         
         

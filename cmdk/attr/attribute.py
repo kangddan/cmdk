@@ -5,6 +5,15 @@ from cmdk.attr.get import GetAttribute
 
         
 class Attribute(object):
+    
+    def __new__(cls, *args, **kwargs) -> 'self':
+        node, attr = args
+        attrName = '{}.{}'.format(node.fullPath, attr)
+        if not cmds.objExists(attrName):
+            raise AttributeError('Invalid Attribute: {}'.format(attrName))
+            
+        return super().__new__(cls) 
+        
     def __init__(self, node, attr):
         self.node = node
         self.attr = attr
@@ -21,7 +30,7 @@ class Attribute(object):
         self.__getitem__(index).set(value)
             
     def __repr__(self):
-        return '<{}.{}>'.format(Attribute, self.fullPath)
+        return '<{}.{}>'.format('Attribute', self.fullPath)
     
     def __str__(self):
         return self.fullPath
@@ -34,6 +43,10 @@ class Attribute(object):
     
     def __call__(self, *args, **kwargs):
         return self.get(*args, **kwargs)
+    
+    def __invert__(self):
+        self.disconnect(True)
+        self.disconnect(False)
     # ---------------------------------------------------------------------
     @property
     def type(self) -> str:
@@ -54,90 +67,19 @@ class Attribute(object):
         if not self.exists(): 
             return om2.MGlobal.displayError('Invalid Attribute: {}'.format(self.fullPath))
         
-        return GetAttribute(self.node.fullPath, self.attr).run()
-        """
-        # message -----------------------------------------------------------------
-        if Attribute.isMessage(self.attr, self.node.fullPath):
-            from cmdk.dg.depNode import DepNode
-            from cmdk.dag.dagNode import DagNode
-            
-            if Attribute.isMessage(self.attr, self.node.fullPath, multi=True): # is multi attr
-                nodes = cmds.listConnections(self.fullPath) or []
-                return [DagNode(node) if omUtils.isDagNode(node) else DepNode(node) for node in nodes]
-                
-            # ---------------------------------------------------    
-            # nodes = cmds.listConnections(self.fullPath, s=False)     # input message
-            # if nodes is None: 
-            #     nodes = cmds.listConnections(self.fullPath, d=False) # output message
-            #     if nodes is None: 
-            #         return
-            nodes = cmds.listConnections(self.fullPath, s=False) or cmds.listConnections(self.fullPath, d=False)
-            if not nodes:
-                return
-            return DagNode(nodes[0]) if omUtils.isDagNode(nodes[0]) else DepNode(nodes[0])
-        # message -----------------------------------------------------------------
-        
-        '''
-        Determine if the attr is a multi attr and return the current index length of the multi attr
-        Although it's a bit strange, it works :)
-        '''
-        length = cmds.getAttr(self.fullPath, s=True)
-        isMulti = self.query(m=True)
-        
-        if isMulti and length == 0:
-            return
-        
-        elif not isMulti and length == 1:
-            value = cmds.getAttr(self.fullPath, *args, **kwargs)
-            return value
-            
-            '''
-            node.attr[0].get() -> node.attr.get()
-            Note that self.query() has converted the indexed attr into a multi-attr at this moment, 
-            making isMulti == True. Therefore, the attr we are querying at this time is the indexed attr !
-            '''
-        elif isMulti and length == 1:  
-            try:
-                value = cmds.getAttr(self.fullPath, *args, **kwargs)
-            except:
-                '''
-                Note the compound attributes of the plusMinusAverage node. 
-                We might need to add a try block to make it work correctly
-                
-                input3D
-                --input3D[0]
-                ----input3Dx
-                '''
-                #value = cmds.getAttr('{0}[{1}]'.format(self.fullPath, 0), *args, **kwargs)
-                value = cmds.getAttr(self.fullPath, *args, **kwargs)
-            return value
-            
-        elif isMulti and length >= 2:
-            values = [cmds.getAttr('{0}[{1}]'.format(self.fullPath, index), *args, **kwargs) for index in range(length)]
-            return values
-            
-        '''
-        try:
-            value = cmds.getAttr(self.fullPath, *args, **kwargs)
-            return value
-        except:
-            values = [cmds.getAttr('{0}[{1}]'.format(self.fullPath, index), *args, **kwargs) for index in range(length)]
-            return values[0] if len(values) == 1 else values
-        '''
-        """
+        return GetAttribute(self.node.fullPath, self.attr).run(*args, **kwargs)
+  
                
     def set(self, *args, **kwargs):
         if not self.exists(): 
             return om2.MGlobal.displayWarning('Invalid Attribute: {}'.format(self.fullPath))
         attrLockState = self.isLocked
-        self.lock(False) if attrLockState else None
+        if attrLockState: self.lock(False)
         # -----------------------------------------------------
         try:
             cmds.setAttr(self.fullPath, *args, **kwargs)
         except:
             om2.MGlobal.displayWarning('Parameter Error')
-            
-            
             
         finally:
             # -----------------------------------------------------
@@ -148,27 +90,54 @@ class Attribute(object):
     # -----------------------------------------------------------------
     
     def connect(self, other):
-        
+        if not isinstance(other, self.__class__):
+            return 
+                
         if not (self.exists() and other.exists()):
             invalidAttr = self.fullPath if not self.exists() else other.fullPath
             return om2.MGlobal.displayWarning('Invalid Attribute: {}'.format(invalidAttr))
             
         if cmds.isConnected(self.fullPath, other.fullPath): # already connected
             return self
-        else:
-            try:
-                cmds.connectAttr(self.fullPath, other.fullPath, f=True)
-                return self
-            except:
-                om2.MGlobal.displayWarning('Attribute Type Error')
-                
-    def disconnect(self):
-        pass
             
+        try:
+            cmds.connectAttr(self.fullPath, other.fullPath, f=True)
+            return self
+        except:
+            om2.MGlobal.displayWarning('Attribute Type Error: \noutput: {}\ninput:  {}'.format(
+                                           self.type, other.type))
+                
+    def disconnect(self, inputConnect=True):
+        
+        connections = cmds.listConnections(self.fullPath, s=True, p=True) or []
+        if not connections:
+            return 
+        
+        for attr in connections:
+            src, dst = (self.fullPath, attr) if inputConnect else (attr, self.fullPath)
+            if cmds.isConnected(src, dst):
+                cmds.disconnectAttr(src, dst)
+        #return self
+   
+    # -----------------------------------------------------------------   
+    @property
+    def parent(self):
+        return [self.node[subAttr] for subAttr in self.query(listParent=True) or []]
+    @property    
+    def children(self):
+        return [self.node[subAttr] for subAttr in self.query(listChildren=True) or []]
+        
+    @property
+    def isParent(self) -> bool:
+        return bool(self.parent)
+        
+    @property
+    def isChildren(self) -> bool:
+        return bool(self.children)
+          
     # -----------------------------------------------------------------    
     def exists(self):
         return True if cmds.objExists(self.fullPath) else False
-        
         
     def query(self, **kwargs):
         '''
@@ -203,7 +172,7 @@ class Attribute(object):
             cmds.renameAttr(self.fullPath, newName)
             return Attribute(self.node, newName).lock(attrLockState)
         except:
-            om2.MGlobal.displayWarning('Parameter Error')
+            om2.MGlobal.displayWarning('Cannot modify the default attribute names of the object')
             self.lock(attrLockState)
             return self    
             

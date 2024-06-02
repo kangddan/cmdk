@@ -3,7 +3,6 @@ import maya.api.OpenMaya as om2
 import cmdk.dg.omUtils as omUtils
 from cmdk.attr.attribute import Attribute
 
-
 class DepNode(object):
     _NODETYPE = cmds.allNodeTypes()
     _CACHE    = {}
@@ -29,7 +28,7 @@ class DepNode(object):
         #return super(DepNode, cls).__new__(cls)
         return super().__new__(cls) 
             
-    
+            
     def __init__(self, nodeName :str = '', nodeType :str = ''):
         if not hasattr(self, '_initOk_'):
             self.__dict__['_IS_INITIALIZED_'] = False  
@@ -60,6 +59,7 @@ class DepNode(object):
             if I undo the operation and run repr again, everything returns to normal
             '''
             return 'Invalid Object'
+            
             
     def __str__(self) -> str:
         fullPath = self.fullPath
@@ -130,18 +130,16 @@ class DepNode(object):
     def __getitem__(self, attr):
         return self.__getattr__(attr)
 
-
     def __setitem__(self, attr, value):
         self.__setattr__(attr, value)
 
-    
     # -----------------------------------------------------------
     @property
     def path(self) -> str | None:
         return (None 
                 if self.fullPath is None 
                 else 
-                self.fullPath.split("|")[-1])
+                self.fullPath.split('|')[-1])
                 
     @property
     def fullPath(self) -> str | None:
@@ -150,15 +148,14 @@ class DepNode(object):
                     if isinstance(self._apiNode, om2.MDagPath) 
                     else self._apiNode.name())        
         return None
-    
-        
+            
     @property
     def name(self) -> str | None:
-        return self.fullPath.split("|")[-1].split(':')[-1]
+        return self.fullPath.split('|')[-1].split(':')[-1]
         
     @property
     def namespace(self) -> str | None:
-        return self.fullPath.split("|")[-1].rpartition(':')[0]
+        return self.fullPath.split('|')[-1].rpartition(':')[0]
     
     @property
     def type(self) -> str:
@@ -196,8 +193,7 @@ class DepNode(object):
     def addAttr(self, attrName='', **kwargs):
         cmds.addAttr(self.fullPath, ln=attrName, **kwargs)
         return Attribute(self, attrName)
-
-        
+    
     def allConnections(self, **kwargs) -> list['self'] | None:
         from cmdk.dag.dagNode import DagNode
         '''
@@ -208,7 +204,6 @@ class DepNode(object):
         nodes = cmds.listConnections(self.fullPath, scn=True, **kwargs) or []
         if not nodes: return
         return [DagNode(node) if omUtils.isDagNode(node) else DepNode(node) for node in nodes]
-
 
 if __name__ == '__main__':
     testNode = DepNode('sb', 'joint')
