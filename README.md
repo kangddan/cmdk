@@ -42,6 +42,23 @@ vec     = cmdk.kNode('pCylinder1_str').getGlobalMatrix().off  # get global pos
 vec2    = matrix * vec                                        # or vec * matrix  带位移的矩阵向量乘 不考虑左乘右乘顺序
 cmdk.kNode('pCylinder1').setGlobalPos(vec2)
 ```
+# 和cmds结合使用
+```python
+import maya.cmds as cmds
+import cmdk
+
+sel = [cmdk.kNode(i) for i in cmds.ls(sl=True)]
+
+for i in sel:
+    print(i.fullPath)
+    
+# 调用str方法，或者显式调用节点字符串属性
+cmds.rename(str(sel[0]), 'abc')
+cmds.rename(sel[0].fullPath, 'abc')
+
+print(sel[0].fullPath)
+# Result: |abc #
+```
 
 
 
