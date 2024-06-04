@@ -1,3 +1,5 @@
+from cmdk.attr.kMatrix import KMatrix
+from cmdk.attr.kVector import KVector
 import maya.cmds as cmds
 import maya.api.OpenMaya as om2
 from cmdk.dg.depNode import DepNode
@@ -33,7 +35,6 @@ class DagNode(DepNode):
         children = []
         '''
         shapePaths = [shape.fullPath for shape in self.shape] 
-        
         '''
         for child in cmds.listRelatives(self.fullPath, c=True, f=True, ni=True) or []:
             '''
@@ -83,20 +84,46 @@ class DagNode(DepNode):
         for child in children:
             if parent: child.parentTo(parent.fullPath)
             else: child.parentToWorld()
-            
-    # --------------------------------------------------------
+
     def moveTo(self, item, **kwargs):
         cmds.matchTransform(self.fullPath, str(item), **kwargs)
+        
+    # --------------------------------------------------------
+    def getGlobalMatrix(self) -> KMatrix:
+        return KMatrix(cmds.xform(self.fullPath, q=True, m=True, ws=True))
+        
+    def setGlobalMatrix(self, matrix: KMatrix):
+        if isinstance(matrix, (KMatrix, list, tuple, om2.MMatrix)):
+            cmds.xform(self.fullPath, m=[*matrix], ws=True)
+            
+    def getLocalMatrix(self) -> KMatrix:
+        return KMatrix(cmds.xform(self.fullPath, q=True, m=True, ws=False))
+        
+    def setLocalMatrix(self, matrix: KMatrix):
+        if isinstance(matrix, (KMatrix, list, tuple, om2.MMatrix)):
+            cmds.xform(self.fullPath, m=[*matrix], ws=False)
+            
+    def getGlobalPos(self) -> KVector:
+        return KVector(cmds.xform(self.fullPath, q=True, t=True, ws=True))
     
+    def setGlobalPos(self, vactor):
+        if isinstance(vactor, (KVector, list, tuple, om2.MVector)):
+            cmds.xform(self.fullPath, t=[*vactor], ws=True)
+    
+    def getLocalPos(self) -> KVector:
+        return KVector(cmds.xform(self.fullPath, q=True, t=True, ws=False))
         
+    def setLocalPos(self, vactor):
+        if isinstance(vactor, (KVector, list, tuple, om2.MVector)):
+            cmds.xform(self.fullPath, t=[*vactor], ws=False)
         
-# if __name__ == '__main__':
-#     testNode = DagNode('pCube1')
-#     testNode2 = DagNode('pSphere1')
+if __name__ == '__main__':    
+    node = DagNode('pCube1') 
+    m = node.getLocalMatrix()  
+ 
+    node.setLocalMatrix(m)
 
-#     testNode.parentTo(testNode2)
-#     testNode.attr.addAttr('metaParent', at='message')
-#     testNode.attr.metaParent.delete()
+
 
 
 

@@ -7,7 +7,6 @@ class DepNode(object):
     _NODETYPE = cmds.allNodeTypes()
     _CACHE    = {}
     
-    
     def __new__(cls, *args, **kwargs) -> 'self':
         nodeName = kwargs.get('nodeName', args[0] if args else None)
         if not isinstance(nodeName, str):
@@ -43,8 +42,8 @@ class DepNode(object):
                 Add to cache dict to help implement the singleton pattern
                 '''
                 DepNode._CACHE[self.uuid] = self
+                
             self._initOk_ = True
-            
             self.__dict__['_IS_INITIALIZED_'] = True 
 
     
@@ -115,7 +114,11 @@ class DepNode(object):
         so when dynamically generating attribute classes
         we should check whether the object has been deleted to avoid recursion
         '''
-        return self.__dict__.get(attr, Attribute(self, attr) if self._apiNode else None)
+        #return self.__dict__.get(attr, Attribute(self, attr) if self._apiNode else None)
+        try:
+            return Attribute(self, attr) if self.fullPath else None
+        except RecursionError:
+            return 
 
     def __setattr__(self, attr, value):
         '''
@@ -209,6 +212,8 @@ if __name__ == '__main__':
     testNode = DepNode('sb', 'joint')
     testNode.apiNode
     testNode.tx.get()
+    testNode.delete()
+    testNode.ty()
     
     testNode.__dict__
     testNode.delete()

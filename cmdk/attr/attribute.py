@@ -104,7 +104,8 @@ class Attribute(object):
             cmds.connectAttr(self.fullPath, other.fullPath, f=True)
             return self
         except:
-            om2.MGlobal.displayWarning('Attribute Type Error: \noutput: {}\ninput:  {}'.format(
+            om2.MGlobal.displayWarning('Attributes cannot be connected. ' +
+            'Please check the attribute types and connection order: \noutput: {}\ninput:  {}'.format(
                                            self.type, other.type))
                 
     def disconnect(self, inputConnect=True):
