@@ -5,6 +5,9 @@
 
 node1 = cmdk.createDagNode('joint', 'testNode1')
 node2 = cmdk.createDepNode('network', 'metaNode')
+# 添加一个或一组对象
+node = cmdk.kNode('pCube1')
+nodes = cmdk.kNode(['pCube1', 'joint1', 'locator1'])
 ```
 # 多种获取/设置属性方式 适应不同情况
 ```python
@@ -48,6 +51,7 @@ import maya.cmds as cmds
 import cmdk
 
 sel = [cmdk.kNode(i) for i in cmds.ls(sl=True)]
+sel = cmdk.kNode(cmds.ls(sl=True))
 
 for i in sel:
     print(i.fullPath)
