@@ -30,10 +30,14 @@ KMatrix(v1: (1.0, 0.0, 0.0); v2: (0.0, 1.0, 0.0); v3: (0.0, 0.0, 1.0); off: (0.0
 
 
 ```
-连接
+连接/断开
 ```python
 node1.message >> node2.affectedBy[0] 
 node1.message.connect(node2.affectedBy[0])
+
+node2.affectedBy[0].disconnect()        # 断开output
+node2.affectedBy[0].disconnect(False)   # 断开input
+~node2.affectedBy[0]                    # 断开所有
 ```
 缓存单例模式 
 ```python
