@@ -40,9 +40,16 @@ cmds.xform('pCylinder1', t=om2.MVector(v2), ws=True)
 
 import cmdk
 
-matrix  = cmdk.kNode('pTorus1').getGlobalMatrix()             # get global matrix
-vec     = cmdk.kNode('pCylinder1_str').getGlobalMatrix().off  # get global pos
-vec2    = matrix * vec                                        # or vec * matrix  带位移的矩阵向量乘 不考虑左乘右乘顺序
+matrix  = cmdk.kNode('pTorus1').getGlobalMatrix()             # 获取全局矩阵
+vec     = cmdk.kNode('pCylinder1_str').getGlobalMatrix().off  # 从全局矩阵分解位移向量
+vec     = cmdk.kNode('pCylinder1_str').getGlobalPos()         # 或者直接获取全局位置
+
+# 带位移的矩阵向量乘 不考虑左乘右乘顺序
+# 在后台持续维护的MPoint引用
+# 不带位移的矩阵向量乘 在这里使用%
+# matrix % vec 或者 vec % matrix, 这时乘法顺序是有意义的
+vec2    = matrix * vec                                        
+vec2    = vec    * matrix 
 cmdk.kNode('pCylinder1').setGlobalPos(vec2)
 ```
 # 和cmds结合使用
