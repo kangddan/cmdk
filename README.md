@@ -15,6 +15,20 @@ mathNode.input3D[0].input3Dx.set(15)
 mathNode.input3D[0].input3Dx.get() 
 mathNode['input3D[0].input3Dy']() 
 mathNode['input3D[0].input3Dy'] = 3
+
+joint = cmdk.createDagNode('joint', 'testJNT')
+joint.message >> mathNode.input1D[0]
+attrs = ['tx', 'worldMatrix[0]', 'message']
+values = [joint[attr].get() for attr in attrs]
+print(values)
+# Result:
+[
+0.0,
+[1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+<DepNode plusMinusAverage 'mathNode'>
+] #
+
+
 ```
 连接
 ```python
