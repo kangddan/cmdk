@@ -393,21 +393,12 @@ class KVector(object):
         elif isinstance(other, self.__class__):
             return self.dot(other)
         elif isinstance(other, KMatrix):
-            #matrix * point
-            pass
+            return other.__mul__(self)
         else:
             return NotImplemented
             
     def __rmul__(self, other):
-        from cmdk.attr.kMatrix import KMatrix
-        
-        if isinstance(other, (int, float, complex)):
-            return KVector(self.x*other, self.z*other, self.y*other)
-        elif isinstance(other, KMatrix):
-            #matrix * point
-            pass
-        else:
-            return NotImplemented
+        return self.__mul__(other)
             
     def __imul__(self, other):
         from cmdk.attr.kMatrix import KMatrix
@@ -415,19 +406,26 @@ class KVector(object):
         if isinstance(other, (int, float, complex)):
             self._omVector *= other
         elif isinstance(other, self.__class__):
-            pass  # dot
+            return self.dot(other)
         elif isinstance(other, KMatrix):
-            pass
+            return other.__imul__(self)
         return self
         
     @attrUtils.checkClass
-    def __mod__(self, other):
+    def __xor__(self, other):
         '''
         Calculates the cross product of the vector and an operand
         '''
         return self.cross(other)
+    
+    @attrUtils.checkClass
+    def __rxor__(self, other):
+        '''
+        Calculates the cross product of the vector and an operand
+        '''
+        return self.__xor__(other)
         
-    def __xor__(self, other):
+    def __mod__(self, other):
         '''
         Calculates an alternative product operation of the vector and a left-side operand
 
@@ -436,28 +434,47 @@ class KVector(object):
         '''
         if isinstance(other, self.__class__):
             return KVector(self.x*other.x, self.y*other.y, self.z*other.z)
-        elif isinstance(other, KMatrix):
-            #matrix * vector
-            pass
         else:
             return NotImplemented
             
-    def __rxor__(self, other):
-        return NotImplemented
+    def __rmod__(self, other):
+        from cmdk.attr.kMatrix import KMatrix
+        if isinstance(other, KMatrix):
+            return other.__rmod__(self) 
+        # elif isinstance(other, self.__class__):
+        #     return self.dot(other)
+        else:
+            return self.__xor__(other)
+       
+    def __imod__(self, other):
+        from cmdk.attr.kMatrix import KMatrix
+        if isinstance(other, self.__class__):
+            self.x *= other.x
+            self.y *= other.y
+            self.z *= other.z
+        elif isinstance(other, KMatrix):
+            return other.__imod__(self) 
+        else:
+            return NotImplemented
+        return self
+    
         
  
     
 if __name__ == '__main__':
     v = KVector(3, 2, 6)
     v2 = KVector(5, 8, 3)
-    print(v)
     
-    v3 = KVector(v2)
+    v %= v2
+
+    # print(v)
     
-    vv = om2.MVector(8, 9, 6)
-    vv3 = KVector(vv)
-    vv3.normalize()
-    vv3._omVector
+    # v3 = KVector(v2)
+    
+    # vv = om2.MVector(8, 9, 6)
+    # vv3 = KVector(vv)
+    # vv3.normalize()
+    # vv3._omVector
 
 
 

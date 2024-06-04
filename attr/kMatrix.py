@@ -10,13 +10,12 @@ class KMatrix(object):
                        v2: KVector = KVector(0, 1, 0), 
                        v3: KVector = KVector(0, 0, 1), 
                       off: KVector = KVector(0, 0, 0)):
+                        
         if isinstance(v1, self.__class__):
-            #self._omMatrix = (v1.v1, v1.v2, v1.v3, v1.off)
             self._omMatrix = self.matrixtoVectors(v1._omMatrix)
         elif isinstance(v1, om2.MMatrix):
             self._omMatrix = self.matrixtoVectors(v1)
         else:
-            # self._omMatrix = (v1, v2, v3, off)
             self._omMatrix = ((*v1, 0), (*v2, 0), (*v3, 0), (*off, 1))
     
     def __repr__(self):
@@ -24,30 +23,24 @@ class KMatrix(object):
                 self.v1, self.v2, self.v3, self.off)
     
     @property
-    def _omMatrix(self):
+    def _omMatrix(self) -> om2.MMatrix:
         return self.__omMatrix
 
     @_omMatrix.setter
     def _omMatrix(self, value):
-        self.__omMatrix = om2.MMatrix((value[0], 
-                                       value[1], 
-                                       value[2], 
-                                       value[3]))
-        # self.__omMatrix = om2.MMatrix(((*value[0], 0), 
-        #                                (*value[1], 0), 
-        #                                (*value[2], 0), 
-        #                                (*value[3], 1)))
+        self.__omMatrix = om2.MMatrix((value[0], value[1], value[2], value[3]))
         
     @staticmethod
-    def matrixtoVectors(matrix: om2.MMatrix):
-        v1  = (matrix[0],  matrix[1],  matrix[2], matrix[3])
-        v2  = (matrix[4],  matrix[5],  matrix[6], matrix[7])
-        v3  = (matrix[8],  matrix[9],  matrix[10], matrix[11])
-        off = (matrix[12], matrix[13], matrix[14], matrix[15])
+    def matrixtoVectors(matrix: om2.MMatrix) -> tuple:
+        _matrix = [*matrix]
+        v1      = _matrix[0:4]
+        v2      = _matrix[4:8]
+        v3      = _matrix[8:12]
+        off     = _matrix[12:16]
         return v1, v2, v3, off
         
     @property
-    def v1(self):
+    def v1(self) -> KVector:
         return KVector(
         self._omMatrix[0], self._omMatrix[1], self._omMatrix[2])
         
@@ -56,7 +49,7 @@ class KMatrix(object):
         self._omMatrix[0], self._omMatrix[1], self._omMatrix[2] = vector
         
     @property
-    def v2(self):
+    def v2(self) -> KVector:
         return KVector(
         self._omMatrix[4], self._omMatrix[5], self._omMatrix[6])
         
@@ -65,7 +58,7 @@ class KMatrix(object):
         self._omMatrix[4], self._omMatrix[5], self._omMatrix[6] = vector
         
     @property
-    def v3(self):
+    def v3(self) -> KVector:
         return KVector(
         self._omMatrix[8], self._omMatrix[9], self._omMatrix[10])
     
@@ -74,7 +67,7 @@ class KMatrix(object):
         self._omMatrix[8], self._omMatrix[9], self._omMatrix[10] = vector
     
     @property
-    def off(self):
+    def off(self) -> KVector:
         return KVector(
         self._omMatrix[12], self._omMatrix[13], self._omMatrix[14])
     
@@ -113,11 +106,23 @@ class KMatrix(object):
         '''
         return KVector(om2.MVector(vector._omPoint * self._omMatrix))
         
-    def mulV(self, vector: KVector) -> KVector:
+    def mulVectorlR(self, vector: KVector) -> KVector:
         '''
         Multiply the vector by the matrix, this does not include any translation
         '''
         return KVector(vector._omVector * self._omMatrix)
+    
+    def mulVectorlL(self, vector: KVector) -> KVector:
+        '''
+        Multiply the vector by the matrix, this does not include any translation
+        '''
+        return KVector(self._omMatrix * vector._omVector)
+    
+    def inverse(self):
+        '''
+        Inverts the matrix
+        '''
+        return KMatrix(self._omMatrix.inverse())
     
     @attrUtils.checkClass    
     def __add__(self, other) -> 'KMatrix':
@@ -146,25 +151,80 @@ class KMatrix(object):
     def __isub__(self, other) -> 'KMatrix':
         self._omMatrix = self.matrixtoVectors(self._omMatrix - other._omMatrix)
         return self
+        
+    def __mul__(self, other):
+        if isinstance(other, self.__class__):
+            return KMatrix(self._omMatrix * other._omMatrix)
+        elif isinstance(other, KVector):
+            return self.mul(other)
+        elif isinstance(other, (int, float, complex)):
+            return KMatrix(self._omMatrix * other)
+        else:
+            return NotImplemented
+            
+    def __rmul__(self, other):
+        return self.__mul__(other)
+        
+    def __imul__(self, other):
+        if isinstance(other, self.__class__):
+            self._omMatrix = self.matrixtoVectors(self._omMatrix * other._omMatrix)
+        elif isinstance(other, KVector):
+            return self.mul(other)
+        elif isinstance(other, (int, float, complex)):
+            self._omMatrix = self.matrixtoVectors(self._omMatrix * other)
+        else:
+            return NotImplemented
+        return self
+    
+    @attrUtils.checkNumberType
+    def __truediv__(self, other) -> 'KMatrix':
+        return KMatrix(self.v1 / other, self.v2 / other, self.v3 / other, self.off / other)
+        
+    def __invert__(self) -> '~KMatrix':
+        return KMatrix(self.inverse())
+        
+    def __mod__(self, other) -> KVector:
+        if isinstance(other, KVector):
+            return self.mulVectorlL(other)
+    
+    def __rmod__(self, other) -> KVector:
+        if isinstance(other, KVector):
+            return self.mulVectorlR(other)
+        else:
+            return NotImplemented
+          
+    def __imod__(self, other):
+        if isinstance(other, KVector):
+            return self.mulVectorlR(other)
+        else:
+            return NotImplemented
+        return self
+   
+    
+    @attrUtils.checkClass
+    def __eq__(self, other) -> bool:
+        return self._omMatrix == other._omMatrix
+        
+    @attrUtils.checkClass
+    def __ne__(self, other) -> bool:
+        return self._omMatrix != other._omMatrix
+        
+            
 
 if __name__ == '__main__':
     
-    m = KMatrix(KVector(5, 6, 5), KVector(5, 8, 5), KVector(0, 4, 2), KVector(7, 12, 15))
-    m._omMatrix
+    v1 = KVector(3, 2, 6)
+    m1 = KMatrix(KVector(5, 6, 5), KVector(5, 8, 5), KVector(0, 4, 2), KVector(7, 4, 2))
+    m2 = KMatrix(KVector(2, 4, 1), KVector(0, 4, 2), KVector(2, 6, 8), KVector(2, 4, 4))
     
-    m2 = KMatrix(KVector(5, 6, 5), KVector(5, 8, 5), KVector(0, 4, 2), KVector(7, 12, 15))
-    m2 += m
-    m2 -= m
-    m2._omMatrix
+    m3 = KMatrix(m1)
 
-    m3 = KMatrix(m2)
-    m3._omMatrix
-    m1 = KMatrix()
-    #v = KVector(3, 2, 6)
-    #m = KMatrix(KVector(5, 6, 5), KVector(5, 8, 5), KVector(0, 4, 2), KVector(7, 12, 15))
-    #m.mul(v)
     
-    #m.mulV(v)
+    m1 == m3
+    
+
+    #m1._omMatrix
+
 
     
 
