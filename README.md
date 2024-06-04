@@ -86,6 +86,20 @@ cmds.rename(sel[0].fullPath, 'abc')
 print(sel[0].fullPath)
 # Result: |abc #
 ```
+当我们获取字符串属性时，如果字符串连接了对象，那么会优先返回对象而不是字符串
+```python
+import cmdk
+metaNode = cmdk.createDepNode('network', 'metaRoot')
+metaNode.addAttr('metaChilds', dt='string', m=True)
+
+for i in range(5):
+    node = cmdk.createDagNode('joint', 'testNode'+str(i))
+    node.message >> metaNode.metaChilds[i]
+    
+metaNode.metaChilds.get()
+# Result: [<DagNode joint 'testNode0'>, <DagNode joint 'testNode1'>,
+<DagNode joint 'testNode2'>, <DagNode joint 'testNode3'>, <DagNode joint 'testNode4'>] #
+```
 
 
 
