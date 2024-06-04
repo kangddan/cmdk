@@ -1,6 +1,8 @@
 import maya.cmds as cmds
 import maya.api.OpenMaya as om2
 import cmdk.dg.omUtils as omUtils
+from cmdk.attr.kMatrix import KMatrix
+from cmdk.attr.kVector import KVector
 
 class GetAttribute(object):
     

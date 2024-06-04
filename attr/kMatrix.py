@@ -5,7 +5,7 @@ import cmdk.attr.attrUtils as attrUtils
 from cmdk.attr.kVector import KVector
 
 class KMatrix(object):
-
+    
     def __init__(self, v1: KVector = KVector(1, 0, 0), 
                        v2: KVector = KVector(0, 1, 0), 
                        v3: KVector = KVector(0, 0, 1), 
@@ -13,7 +13,7 @@ class KMatrix(object):
                         
         if isinstance(v1, self.__class__):
             self._omMatrix = self.matrixtoVectors(v1._omMatrix)
-        elif isinstance(v1, om2.MMatrix):
+        elif isinstance(v1, (om2.MMatrix, list, tuple)):
             self._omMatrix = self.matrixtoVectors(v1)
         else:
             self._omMatrix = ((*v1, 0), (*v2, 0), (*v3, 0), (*off, 1))
@@ -123,6 +123,17 @@ class KMatrix(object):
         Inverts the matrix
         '''
         return KMatrix(self._omMatrix.inverse())
+        
+    def __iter__(self):
+        return iter(self._omMatrix)
+    
+    @attrUtils.checkNumberType
+    def __getitem__(self, index) -> float:
+        return self._omMatrix[index]
+    
+    @attrUtils.checkNumberType        
+    def __setitem__(self, index, value):
+        self._omMatrix[index] = value
     
     @attrUtils.checkClass    
     def __add__(self, other) -> 'KMatrix':
@@ -180,7 +191,7 @@ class KMatrix(object):
     def __truediv__(self, other) -> 'KMatrix':
         return KMatrix(self.v1 / other, self.v2 / other, self.v3 / other, self.off / other)
         
-    def __invert__(self) -> '~KMatrix':
+    def __invert__(self) -> 'KMatrix':
         return KMatrix(self.inverse())
         
     def __mod__(self, other) -> KVector:
@@ -213,14 +224,18 @@ class KMatrix(object):
 
 if __name__ == '__main__':
     
-    v1 = KVector(3, 2, 6)
-    m1 = KMatrix(KVector(5, 6, 5), KVector(5, 8, 5), KVector(0, 4, 2), KVector(7, 4, 2))
-    m2 = KMatrix(KVector(2, 4, 1), KVector(0, 4, 2), KVector(2, 6, 8), KVector(2, 4, 4))
-    
-    m3 = KMatrix(m1)
+    mm = KMatrix()
+    mm[4] = 16
+    mm.v2
+
+    # v1 = KVector(3, 2, 6)
+    # m1 = KMatrix(KVector(5, 6, 5), KVector(5, 8, 5), KVector(0, 4, 2), KVector(7, 4, 2))
+    # m2 = KMatrix(KVector(2, 4, 1), KVector(0, 4, 2), KVector(2, 6, 8), KVector(2, 4, 4))
+    # [*m2]
+    # m3 = KMatrix(m1)
 
     
-    m1 == m3
+    # m1 == m3
     
 
     #m1._omMatrix

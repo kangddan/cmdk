@@ -12,7 +12,7 @@ class KVector(object):
                         
         if isinstance(x, self.__class__):
             self._omVector = x._omVector
-        elif isinstance(x, om2.MVector):
+        elif isinstance(x, (om2.MVector, list, tuple)):
             self._omVector = x
         else:
             self._omVector = (x, y, z)
@@ -262,9 +262,10 @@ class KVector(object):
     
     # -----------------------------------------------------
     def __iter__(self):
-        yield self.x
-        yield self.y
-        yield self.z
+        # yield self.x
+        # yield self.y
+        # yield self.z
+        return iter((self.x, self.y, self.z))
     
     @attrUtils.checkNumberType     
     def __getitem__(self, index) -> float:
@@ -465,7 +466,11 @@ if __name__ == '__main__':
     v = KVector(3, 2, 6)
     v2 = KVector(5, 8, 3)
     
-    v %= v2
+    aad = KVector((5, 6, 3))
+    aad._omVector
+    
+    sb = KVector(v)
+    sb.normalize()
 
     # print(v)
     
