@@ -41,7 +41,7 @@ node2.affectedBy[0].disconnect(False)   # 断开input
 node  = cmdk.createDagNode('joint', 'JNT')
 node2 = cmdk.kNode('JNT')
 node == node2       # Result: True #
-node.getCache()     # Result: {'03A1372E-4E6D-3787-FD4E-7597FEBE49BE': <DagNode joint 'JNT'>} #
+cmdk.getCache()     # Result: {'03A1372E-4E6D-3787-FD4E-7597FEBE49BE': <DagNode joint 'JNT'>} #
 
 # 强引用添加到缓存字典
 nodes = [cmdk.createDepNode('network', 'metaNode_{}'.format(i)) for i in range(3)]
@@ -49,7 +49,7 @@ nodes = [cmdk.createDepNode('network', 'metaNode_{}'.format(i)) for i in range(3
 for i in range(3):
     cmdk.createDepNode('network', 'metaNode_{}'.format(i))
 # 删除全部缓存
-node.clearCache(); node.getCache() # Result: {} #
+cmdk.clearCache(); cmdk.getCache() # Result: {} #
 ```
 和cmds对比 
 ```python
