@@ -10,28 +10,24 @@ class DepNode(object):
     def __new__(cls, *args, **kwargs) -> 'self':
         nodeName = kwargs.get('nodeName', args[0] if args else None)
         if not isinstance(nodeName, str):
-            raise ValueError('The nodeName must be a string')
+            raise TypeError('The nodeName must be a string')
         
         nodeType = kwargs.get('nodeType', args[1] if len(args) > 1 else None)
         if nodeType and nodeType not in cls._NODETYPE:
-            raise ValueError('NodeType error')
+            raise TypeError('Not a Maya node type')
         
         if nodeType is None:
             uuid = omUtils.getUUID(nodeName)
             if omUtils.UUIDExists(uuid) and uuid in cls._CACHE:
                 return cls._CACHE[uuid]
         
-        '''
-        To avoid errors caused by reloading
-        '''
-        #return super(DepNode, cls).__new__(cls)
-        return super().__new__(cls) 
+        instance = super().__new__(cls) 
+        instance.__dict__['_initAttrs'] = False
+        return instance
             
             
     def __init__(self, nodeName :str = '', nodeType :str = ''):
-        if not hasattr(self, '_initOk_'):
-            self.__dict__['_IS_INITIALIZED_'] = False  
-            
+        if not hasattr(self, '_init'):
             self.node = nodeName
             if not self.exists() and nodeType:
                 self._create(nodeType)
@@ -42,9 +38,13 @@ class DepNode(object):
                 Add to cache dict to help implement the singleton pattern
                 '''
                 DepNode._CACHE[self.uuid] = self
-                
-            self._initOk_ = True
-            self.__dict__['_IS_INITIALIZED_'] = True 
+            
+            '''
+            Avoid repeated initialization
+            '''    
+            self._init      = True
+            self._initAttrs = True 
+            
 
     
     def __repr__(self) -> str:
@@ -106,7 +106,7 @@ class DepNode(object):
     # -----------------------------------------------------------
     
     def __getattr__(self, attr):
-        if attr == '_initOk_':
+        if attr == '_init':
             raise AttributeError
             
         '''
@@ -114,7 +114,6 @@ class DepNode(object):
         so when dynamically generating attribute classes
         we should check whether the object has been deleted to avoid recursion
         '''
-        #return self.__dict__.get(attr, Attribute(self, attr) if self._apiNode else None)
         try:
             return Attribute(self, attr) if self.fullPath else None
         except RecursionError:
@@ -125,7 +124,7 @@ class DepNode(object):
         Note: Do not use self.__dict__.get(attr) is None to check if an attribute is an instance attribute,
         because calling get will trigger the __getattr__ method again, causing infinite recursion !!!
         '''
-        if self._IS_INITIALIZED_ and attr not in self.__dict__:
+        if self._initAttrs and attr not in self.__dict__:
             getattr(self, attr).set(value)
         else:
             object.__setattr__(self, attr, value)
@@ -207,17 +206,3 @@ class DepNode(object):
         nodes = cmds.listConnections(self.fullPath, scn=True, **kwargs) or []
         if not nodes: return
         return [DagNode(node) if omUtils.isDagNode(node) else DepNode(node) for node in nodes]
-
-if __name__ == '__main__':
-    testNode = DepNode('sb', 'joint')
-    testNode.apiNode
-    testNode.tx.get()
-    testNode.delete()
-    testNode.ty()
-    
-    testNode.__dict__
-    testNode.delete()
-    testNode.exists()
-
-    
-
