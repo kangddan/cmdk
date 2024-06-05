@@ -7,7 +7,7 @@ import cmdk
 node1 = cmdk.createDagNode('joint', 'testNode1')
 node2 = cmdk.createDepNode('network', 'metaNode')
 # 添加一个或一组对象
-node = cmdk.kNode('pCube1')
+node  = cmdk.kNode('pCube1')
 nodes = cmdk.kNode(['pCube1', 'joint1', 'locator1'])
 ```
 多种获取/设置属性方式 适应不同情况
@@ -23,7 +23,9 @@ joint.message >> mathNode.input1D[0]
 attrs = ['tx', 'worldMatrix[0]', 'message']
 values = [joint[attr].get() for attr in attrs]
 print(values)
-# Result: [0.0, KMatrix(v1: (1.0, 0.0, 0.0); v2: (0.0, 1.0, 0.0); v3: (0.0, 0.0, 1.0); off: (0.0, 0.0, 0.0)), <DepNode plusMinusAverage 'mathNode'>] #
+# Result: [0.0,
+# KMatrix(v1: (1.0, 0.0, 0.0); v2: (0.0, 1.0, 0.0); v3: (0.0, 0.0, 1.0); off: (0.0, 0.0, 0.0)),
+# <DepNode plusMinusAverage 'mathNode'>] #
 ```
 连接/断开
 ```python
@@ -36,9 +38,18 @@ node2.affectedBy[0].disconnect(False)   # 断开input
 ```
 缓存单例模式 
 ```python
-node3 = cmdk.kNode('testNode1')
-id(node1) == id(node3)
-# Result: True #
+node  = cmdk.createDagNode('joint', 'JNT')
+node2 = cmdk.kNode('JNT')
+node == node2       # Result: True #
+node.getCache()     # Result: {'03A1372E-4E6D-3787-FD4E-7597FEBE49BE': <DagNode joint 'JNT'>} #
+
+# 强引用添加到缓存字典
+nodes = [cmdk.createDepNode('network', 'metaNode_{}'.format(i)) for i in range(3)]
+# 无引用时不添加缓存
+for i in range(3):
+    cmdk.createDepNode('network', 'metaNode_{}'.format(i))
+# 删除全部缓存
+node.clearCache(); node.getCache() # Result: {} #
 ```
 和cmds对比 
 ```python
