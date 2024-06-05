@@ -1,5 +1,7 @@
-轻量级的 mayaPython wrapper
-创建
+![Python version](https://img.shields.io/badge/MAYA-2024-blue?logo=aab) ![Python version](https://img.shields.io/badge/Python-3.10%2C3.11-_blue?logo=aab)
+
+
+创建/添加
 ```python
 import cmdk
 node1 = cmdk.createDagNode('joint', 'testNode1')
@@ -21,14 +23,7 @@ joint.message >> mathNode.input1D[0]
 attrs = ['tx', 'worldMatrix[0]', 'message']
 values = [joint[attr].get() for attr in attrs]
 print(values)
-# Result:
-[
-0.0,
-KMatrix(v1: (1.0, 0.0, 0.0); v2: (0.0, 1.0, 0.0); v3: (0.0, 0.0, 1.0); off: (0.0, 0.0, 0.0)),
-<DepNode plusMinusAverage 'mathNode'>
-] #
-
-
+# Result: [0.0, KMatrix(v1: (1.0, 0.0, 0.0); v2: (0.0, 1.0, 0.0); v3: (0.0, 0.0, 1.0); off: (0.0, 0.0, 0.0)), <DepNode plusMinusAverage 'mathNode'>] #
 ```
 连接/断开
 ```python
@@ -49,21 +44,18 @@ id(node1) == id(node3)
 ```python
 import maya.api.OpenMaya as om2
 import maya.cmds as cmds
-
 m1 = om2.MMatrix(cmds.xform('pTorus1', q=True, m=True, ws=True))
 v1 = om2.MVector(cmds.xform('pCylinder1_str', q=True, t=True, ws=True))
 v2 = om2.MPoint(v1) * m1 
 cmds.xform('pCylinder1', t=om2.MVector(v2), ws=True)
 
 import cmdk
-
 matrix  = cmdk.kNode('pTorus1').getGlobalMatrix()             # 获取全局矩阵
 vec     = cmdk.kNode('pCylinder1_str').getGlobalMatrix().off  # 从全局矩阵分解位移向量
 vec     = cmdk.kNode('pCylinder1_str').getGlobalPos()         # 或者直接获取全局位置
-
-# 使用*相乘时 不考虑左右乘顺序, 会自动调用向量类的MPoint引用
-# 不带位移的矩阵向量乘 在这里使用%
-# matrix % vec 或者 vec % matrix, 这时乘法顺序是有意义的
+# 使用*计算带位移的矩阵向量乘 不考虑左右乘顺序
+# 使用%计算不带位移的矩阵向量乘
+# matrix % vec 或者 vec % matrix, 此时乘法顺序有意义
 vec2    = matrix * vec                                        
 vec2    = vec    * matrix 
 cmdk.kNode('pCylinder1').setGlobalPos(vec2)
@@ -86,7 +78,7 @@ cmds.rename(sel[0].fullPath, 'abc')
 print(sel[0].fullPath)
 # Result: |abc #
 ```
-字符串属性连接了对象，优先返回对象而不是字符串
+字符串属性优先返回对象
 ```python
 import cmdk
 metaNode = cmdk.createDepNode('network', 'metaRoot')
