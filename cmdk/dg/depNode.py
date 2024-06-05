@@ -1,3 +1,6 @@
+import threading
+import weakref
+
 import maya.cmds as cmds
 import maya.api.OpenMaya as om2
 import cmdk.dg.omUtils as omUtils
@@ -5,7 +8,8 @@ from cmdk.attr.attribute import Attribute
 
 class DepNode(object):
     _NODETYPE = cmds.allNodeTypes()
-    _CACHE    = {}
+    _CACHE = weakref.WeakValueDictionary()
+    _LOCK = threading.Lock()
     
     def __new__(cls, *args, **kwargs) -> 'self':
         nodeName = kwargs.get('nodeName', args[0] if args else None)
@@ -15,38 +19,56 @@ class DepNode(object):
         nodeType = kwargs.get('nodeType', args[1] if len(args) > 1 else None)
         if nodeType and nodeType not in cls._NODETYPE:
             raise TypeError('Not a Maya node type')
-        
+
         if nodeType is None:
             uuid = omUtils.getUUID(nodeName)
-            if omUtils.UUIDExists(uuid) and uuid in cls._CACHE:
-                return cls._CACHE[uuid]
+            with cls._LOCK:
+                if omUtils.UUIDExists(uuid) and uuid in cls._CACHE:
+                    return cls._CACHE[uuid]
         
         instance = super().__new__(cls) 
         instance.__dict__['_initAttrs'] = False
         return instance
-            
-            
-    def __init__(self, nodeName :str = '', nodeType :str = ''):
-        if not hasattr(self, '_init'):
-            self.node = nodeName
-            if not self.exists() and nodeType:
-                self._create(nodeType)
-            
-            if self._apiNode:
-                self._instanceUUID = self.uuid
-                '''
-                Add to cache dict to help implement the singleton pattern
-                '''
-                DepNode._CACHE[self.uuid] = self
-            
-            '''
-            Avoid repeated initialization
-            '''    
-            self._init      = True
-            self._initAttrs = True 
-            
-
     
+    @classmethod
+    def clearCache(cls):
+        with cls._LOCK:
+            cls._CACHE.clear()
+            
+    @classmethod
+    def removeFromCache(cls, uuid):
+        with cls._LOCK:
+            if uuid in cls._CACHE:
+                del cls._CACHE[uuid]
+                
+    @classmethod
+    def getCache(cls):
+        with cls._LOCK:
+            return {uuid: node for uuid, node in cls._CACHE.items()}
+                
+    def __init__(self, nodeName :str = '', nodeType :str = ''):
+        if hasattr(self, '_init') and self._init:
+            return
+            
+        self.node = nodeName
+        if not self.exists() and nodeType:
+            self._create(nodeType)
+        
+        if self._apiNode:
+            self._instanceUUID = self.uuid
+            '''
+            Add to cache dict to help implement the singleton pattern
+            '''
+            with DepNode._LOCK:
+                DepNode._CACHE[self._instanceUUID] = self
+        
+        '''
+        Avoid repeated initialization
+        '''    
+        self._init      = True
+        self._initAttrs = True 
+            
+                
     def __repr__(self) -> str:
         try:
             return "<{0} {1} '{2}'>".format(self.__class__.__name__, self.type, 
@@ -65,6 +87,7 @@ class DepNode(object):
         if not fullPath:
             return om2.MGlobal.displayWarning('INVALID OBJECT')
         return fullPath
+            
             
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -184,7 +207,20 @@ class DepNode(object):
         return cmds.lockNode(self.fullPath, query=True, lock=True)[0]
         
     def delete(self):
-        cmds.delete(self.fullPath)
+        '''
+        Lock connected nodes when deleting a node to prevent accidental deletion
+        '''
+        nodes = self.allConnections()
+        if not nodes: 
+            self.lock(False); cmds.delete(self.fullPath)
+        else:
+            nodeLockStates = [node.isLocked for node in nodes] 
+            for node in nodes: node.lock()
+            # ------------------------------
+            self.lock(False); cmds.delete(self.fullPath)
+            # ------------------------------
+            for node, states in zip(nodes, nodeLockStates): 
+                node.lock(states)
         self._apiNode = None 
         
     # -------------------------------------------------------------------------------------------
