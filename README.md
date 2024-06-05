@@ -91,14 +91,14 @@ print(sel[0].fullPath)
 import cmdk
 metaNode = cmdk.createDepNode('network', 'metaRoot')
 metaNode.addAttr('metaChilds', dt='string', m=True)
+metaNode.metaChilds[0].set('abc', typ='string')
+metaNode.metaChilds[1].set('def', typ='string')
 
-for i in range(5):
+for i in range(3):
     node = cmdk.createDagNode('joint', 'testNode'+str(i))
     node.message >> metaNode.metaChilds[i]
-    
 metaNode.metaChilds.get()
-# Result: [<DagNode joint 'testNode0'>, <DagNode joint 'testNode1'>,
-<DagNode joint 'testNode2'>, <DagNode joint 'testNode3'>, <DagNode joint 'testNode4'>] #
+# Result: [<DagNode joint 'testNode0'>, <DagNode joint 'testNode1'>, <DagNode joint 'testNode2'>] #
 ```
 
 
