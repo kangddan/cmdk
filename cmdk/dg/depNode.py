@@ -50,9 +50,9 @@ class DepNode(object):
         if hasattr(self, '_init') and self._init:
             return
             
-        self.node = nodeName
+        self._checkNode(nodeName)
         if not self.exists() and nodeType:
-            self._create(nodeType)
+            self._create(nodeType, nodeName)
         
         if self._apiNode:
             self._instanceUUID = self.uuid
@@ -65,9 +65,8 @@ class DepNode(object):
         '''
         Avoid repeated initialization
         '''    
-        self._init      = True
-        self._initAttrs = True 
-            
+        self._init = True; self._initAttrs = True
+         
                 
     def __repr__(self) -> str:
         try:
@@ -99,21 +98,11 @@ class DepNode(object):
         else:
             return False
     
-    @property
-    def node(self) -> str:
-        return self._node
-        
-    @node.setter
-    def node(self, nodeName: str):
-        self._apiNode = False
-        self._node = nodeName
-        
-        if self._node and cmds.objExists(self._node):
-            self._apiNode = omUtils.toMDagPathOrDepNode(self._node)
+    def _checkNode(self, nodeName: str):
+        self._apiNode = omUtils.toMDagPathOrDepNode(nodeName) if cmds.objExists(nodeName) else False
     
-    def _create(self, nodeType: str):
-        self.node = omUtils.createNode(nodeType, self.node)
-        return self
+    def _create(self, nodeType: str, nodeName: str):
+        self._checkNode(omUtils.createNode(nodeType, nodeName))
         
     @property
     def apiNode(self) -> om2.MFnDependencyNode:
