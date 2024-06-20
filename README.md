@@ -4,7 +4,7 @@
 创建/添加
 ```python
 import cmdk
-node1 = cmdk.createDagNode('joint', 'testNode1')
+node1 = cmdk.createDagNode('joint')
 node2 = cmdk.createDepNode('network', 'metaNode')
 # 添加一个或一组对象
 node  = cmdk.kNode('pCube1')
@@ -12,7 +12,7 @@ nodes = cmdk.kNode(['pCube1', 'joint1', 'locator1'])
 ```
 多种获取/设置属性方式 适应不同情况
 ```python
-mathNode = cmdk.createDepNode('plusMinusAverage', 'mathNode') 
+mathNode = cmdk.createDepNode('plusMinusAverage') 
 mathNode.input3D[0].input3Dx.set(15) 
 mathNode.input3D[0].input3Dx.get() 
 mathNode['input3D[0].input3Dy']() 
@@ -94,16 +94,14 @@ print(sel[0].fullPath)
 import cmdk
 metaNode = cmdk.createDepNode('network', 'metaRoot')
 metaNode.addAttr('metaChilds', dt='string', m=True)
-metaNode.metaChilds[0].set('aa', typ='string')
-metaNode.metaChilds[1].set('bb', typ='string')
-metaNode.metaChilds[2].set('cc', typ='string')
-metaNode.metaChilds[3].set('dd', typ='string')
+for i in range(4):
+    metaNode['metaChilds'][i].set(i, typ='string')
 
 for i in range(2):
     node = cmdk.createDagNode('joint', 'testNode'+str(i))
     node.message >> metaNode.metaChilds[i]
 metaNode.metaChilds.get()
-# Result: [<DagNode joint 'testNode0'>, <DagNode joint 'testNode1'>, 'cc', 'dd'] #
+# Result: [<DagNode joint 'testNode0'>, <DagNode joint 'testNode1'>, '2', '3'] #
 ```
 
 
