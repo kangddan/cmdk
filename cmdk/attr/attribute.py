@@ -176,9 +176,9 @@ class Attribute(object):
         
         if any(key in kwargs and kwargs[key] for key in ['plugs', 'p']):
             # return [Attribute(DepNode(node.split('.')[0]), '.'.join(node.split('.')[1:])) for node in nodes]
-            return [DepNode(node.split('.')[0])['.'.join(node.split('.')[1:])] for node in nodes]
+            return [DepNode('', node.split('.')[0])['.'.join(node.split('.')[1:])] for node in nodes]
         else:
-            return [DagNode(node) if omUtils.isDagNode(node) else DepNode(node) for node in nodes]
+            return [DagNode('', node) if omUtils.isDagNode(node) else DepNode('', node) for node in nodes]
             
     
     # ------------------------------------------------------------------------

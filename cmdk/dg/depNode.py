@@ -236,7 +236,7 @@ class DepNode(object):
         '''
         nodes = cmds.listConnections(self.fullPath, scn=True, **kwargs) or []
         if not nodes: return
-        return [DagNode(node) if omUtils.isDagNode(node) else DepNode(node) for node in nodes]
+        return [DagNode('', node) if omUtils.isDagNode(node) else DepNode('', node) for node in nodes]
 
 if __name__ == '__main__':    
     meta = DepNode('network', 'test')
