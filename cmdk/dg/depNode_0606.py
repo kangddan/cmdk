@@ -12,16 +12,13 @@ class DepNode(object):
     _LOCK = threading.Lock()
     
     def __new__(cls, *args, **kwargs) -> 'self':
-    
-        nodeType = kwargs.get('nodeType', args[0] if args else None)
+        nodeName = kwargs.get('nodeName', args[0] if args else None)
+        if not isinstance(nodeName, str):
+            raise TypeError('The nodeName must be a string')
+        
+        nodeType = kwargs.get('nodeType', args[1] if len(args) > 1 else None)
         if nodeType and nodeType not in cls._NODETYPE:
             raise TypeError('Not a Maya node type')
-            
-        nodeName = kwargs.get('nodeName', args[1] if len(args) > 1 else None)
-        '''
-        if not isinstance(nodeName, str) or len(nodeName) == 0:
-            raise TypeError('The nodeName must be a non-empty string')
-        '''
 
         if nodeType is None:
             uuid = omUtils.getUUID(nodeName)
@@ -49,13 +46,13 @@ class DepNode(object):
         with cls._LOCK:
             return {uuid: node for uuid, node in cls._CACHE.items()}
                 
-    def __init__(self, nodeType :str = '', nodeName :str = ''):
+    def __init__(self, nodeName :str = '', nodeType :str = ''):
         if hasattr(self, '_init') and self._init:
             return
             
-        self._check(nodeName)
+        self.node = nodeName
         if not self.exists() and nodeType:
-            self._create(nodeType, nodeName)
+            self._create(nodeType)
         
         if self._apiNode:
             self._instanceUUID = self.uuid
@@ -68,8 +65,9 @@ class DepNode(object):
         '''
         Avoid repeated initialization
         '''    
-        self._init = True; self._initAttrs = True
-         
+        self._init      = True
+        self._initAttrs = True 
+            
                 
     def __repr__(self) -> str:
         try:
@@ -101,12 +99,21 @@ class DepNode(object):
         else:
             return False
     
-    def _check(self, nodeName: str):
-        self._apiNode = omUtils.toMDagPathOrDepNode(nodeName) if cmds.objExists(nodeName) else False
+    @property
+    def node(self) -> str:
+        return self._node
+        
+    @node.setter
+    def node(self, nodeName: str):
+        self._apiNode = False
+        self._node = nodeName
+        
+        if self._node and cmds.objExists(self._node):
+            self._apiNode = omUtils.toMDagPathOrDepNode(self._node)
     
-    def _create(self, nodeType: str, nodeName: str):
-        node = omUtils.createNode(nodeType, nodeName)
-        self._check(node)
+    def _create(self, nodeType: str):
+        self.node = omUtils.createNode(nodeType, self.node)
+        return self
         
     @property
     def apiNode(self) -> om2.MFnDependencyNode:
@@ -146,9 +153,7 @@ class DepNode(object):
             object.__setattr__(self, attr, value)
             
     def __getitem__(self, attr):
-        if attr not in self.__dict__:
-            return self.__getattr__(attr)
-        return self.__dict__.get(attr)
+        return self.__getattr__(attr)
 
     def __setitem__(self, attr, value):
         self.__setattr__(attr, value)
@@ -205,7 +210,7 @@ class DepNode(object):
         '''
         Lock connected nodes when deleting a node to prevent accidental deletion
         '''
-        nodes = self.connections()
+        nodes = self.allConnections()
         if not nodes: 
             self.lock(False); cmds.delete(self.fullPath)
         else:
@@ -220,14 +225,14 @@ class DepNode(object):
         
     # -------------------------------------------------------------------------------------------
 
-    def listAttr(self, **kwargs) -> list[Attribute]:
+    def listAttr(self, **kwargs):
         return [Attribute(self, attr) for attr in cmds.listAttr(self.fullPath, **kwargs) or []]
                 
-    def addAttr(self, attrName='', **kwargs) -> Attribute:
+    def addAttr(self, attrName='', **kwargs):
         cmds.addAttr(self.fullPath, ln=attrName, **kwargs)
         return Attribute(self, attrName)
     
-    def connections(self, **kwargs) -> list['self'] | None:
+    def allConnections(self, **kwargs) -> list['self'] | None:
         from cmdk.dag.dagNode import DagNode
         '''
         Why use snc=True? 
@@ -238,6 +243,18 @@ class DepNode(object):
         if not nodes: return
         return [DagNode(node) if omUtils.isDagNode(node) else DepNode(node) for node in nodes]
 
-if __name__ == '__main__':    
-    meta = DepNode('network', 'test')
+if __name__ == '__main__':
+    testNode = DepNode('sb', 'joint')
+    testNode.getCache()
+    #testNode.clearCache()
+    a = DepNode('sb')
+    
+    id(a) == id(testNode)
+    
+
+    
+
+    #testNode.fullPath
+
+    
 

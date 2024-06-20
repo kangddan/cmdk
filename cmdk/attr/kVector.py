@@ -9,19 +9,18 @@ class KVector(object):
     def __init__(self, x: float = 0, 
                        y: float = 0, 
                        z: float = 0):
-                        
-        if isinstance(x, self.__class__):
-            self._omVector = x._omVector
-        elif isinstance(x, (om2.MVector, list, tuple)):
-            self._omVector = x
-        else:
-            self._omVector = (x, y, z)
-    
+        
+        self._omVector = x if isinstance(x, (self.__class__, om2.MVector, list, tuple)) else (x, y, z)
+
+
     def __repr__(self):
-        return 'KVector({}, {}, {})'.format(self.x, self.y, self.z)
+        return 'KVector({}, {}, {})'.format(*self)
         
     def __str__(self):
-        return '({}, {}, {})'.format(*self)
+        return str((*self,))
+    
+    def __iter__(self):
+        return (i for i in (self.x, self.y, self.z))
         
     @property
     def _omVector(self) -> om2.MVector:
@@ -243,8 +242,9 @@ class KVector(object):
         '''
         Calculates the cross product of the self and other
         '''
-        crossProduct = self._omVector ^ other._omVector
-        return KVector(crossProduct.x, crossProduct.y, crossProduct.z)
+        #crossProduct = self._omVector ^ other._omVector
+        #return KVector(crossProduct.x, crossProduct.y, crossProduct.z)
+        return KVector(self._omVector ^ other._omVector)
         
     @attrUtils.checkClass  
     def getDistance(self, other) -> float:
@@ -261,11 +261,6 @@ class KVector(object):
         return v1._omPoint.distanceTo(v2._omPoint)
     
     # -----------------------------------------------------
-    def __iter__(self):
-        # yield self.x
-        # yield self.y
-        # yield self.z
-        return iter((self.x, self.y, self.z))
     
     @attrUtils.checkNumberType     
     def __getitem__(self, index) -> float:
@@ -347,11 +342,11 @@ class KVector(object):
     
     @attrUtils.checkClass        
     def __ne__(self, other) -> bool:
-        return self._omVector != other._omVector
+        return self._omVector.__ne__(other._omVector) 
         
     @attrUtils.checkClass        
     def __eq__(self, other) -> bool:
-        return self._omVector == other._omVector
+        return self._omVector.__eq__(other._omVector)
         
     def __invert__(self) -> 'KVector':
         '''
@@ -463,14 +458,24 @@ class KVector(object):
  
     
 if __name__ == '__main__':
-    v = KVector(3, 2, 6)
-    v2 = KVector(5, 8, 3)
+    v1 = KVector(1, 0, 0)
+    v1._omVector
     
-    aad = KVector((5, 6, 3))
-    aad._omVector
+    vec1 = KVector(v1)
+    vec1._omVector
     
-    sb = KVector(v)
-    sb.normalize()
+    vec1.x = 3
+    
+    v3 = KVector((5, 6, 3))
+    v3._omVector
+    # v = KVector(3, 2, 6)
+    # v2 = KVector(5, 8, 3)
+    
+    # aad = KVector((5, 6, 3))
+    # aad._omVector
+    
+    # sb = KVector(v)
+    # sb.normalize()
 
     # print(v)
     

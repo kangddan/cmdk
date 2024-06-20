@@ -55,11 +55,17 @@ def UUIDExists(uuid: str | om2.MUuid) -> bool:
     elif isinstance(uuid, om2.MUuid):
         return uuid.valid()
     return False
+
+# ---------------------------------------
+def isStr(value):
+    return isinstance(value, str) and len(value) > 0
     
 def createNode(nodeType, nodeName):
+    nodeArgs = {'n': nodeName} if isStr(nodeName) else {}
+    
     if nodeType == 'locator':
-        return cmds.spaceLocator(n=nodeName)[0]
-    return cmds.createNode(nodeType, n=nodeName)
+        return cmds.spaceLocator(**nodeArgs)[0]
+    return cmds.createNode(nodeType, **nodeArgs)
     
 
 def isDagNode(nodeName: str) -> bool:

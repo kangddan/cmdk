@@ -6,10 +6,25 @@ from cmdk.dg.depNode import DepNode
 
 class DagNode(DepNode):
     
-    def __init__(self, nodeName :str = '', nodeType :str = ''):
-        #super(DagNode, self).__init__(nodeName, nodeType)
-        super().__init__(nodeName, nodeType)
-        
+    def __init__(self, nodeType :str = '', nodeName :str = ''):
+        super().__init__(nodeType, nodeName)
+    
+    def delete(self):
+        '''
+        When there are too many children, a recursion error is triggered
+        You should directly use cmdk.delete()
+        '''
+        try:
+            children = self.children
+            if children:
+                for c in children:
+                    c.delete()
+        except RecursionError:
+            super().delete()
+        else:
+            super().delete()
+
+      
     def setVisibility(self, Value):
         if self.exists():
             cmds.setAttr('{0}.visibility'.format(self.fullPath), Value)
@@ -28,6 +43,17 @@ class DagNode(DepNode):
         return [DagNode(shape) 
         for shape in cmds.listRelatives(self.fullPath, s=True, f=True, ni=True) 
         or []]
+        '''
+        @property
+        def shapeData(self):
+            #return SplineData(self)
+            pass
+        
+        @shapeData.setter
+        def shapeData(self, data):
+            #SplineData(self, data)
+            pass
+        '''
         
     @property
     def children(self):
@@ -118,10 +144,8 @@ class DagNode(DepNode):
             cmds.xform(self.fullPath, t=[*vactor], ws=False)
         
 if __name__ == '__main__':    
-    node = DagNode('pCube1') 
-    m = node.getLocalMatrix()  
- 
-    node.setLocalMatrix(m)
+    node = DagNode('', 'joint2') 
+    #node.shape[0].delete()
 
 
 

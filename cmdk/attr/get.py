@@ -27,7 +27,7 @@ class GetAttribute(object):
         return ']' != self.fullPath[-1] and  _isMulti
         
     # attr types -----------------------------------------------------------
-    def queryType(self, _type) -> bool:
+    def queryType(self, _type: str) -> bool:
         return cmds.getAttr(self.fullPath, typ=True) == _type
         
     @property

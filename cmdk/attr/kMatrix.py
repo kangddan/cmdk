@@ -11,17 +11,25 @@ class KMatrix(object):
                        v3: KVector = KVector(0, 0, 1), 
                       off: KVector = KVector(0, 0, 0)):
                         
-        if isinstance(v1, self.__class__):
-            self._omMatrix = self.matrixtoVectors(v1._omMatrix)
-        elif isinstance(v1, (om2.MMatrix, list, tuple)):
+        if isinstance(v1, (self.__class__, om2.MMatrix, list, tuple)):
             self._omMatrix = self.matrixtoVectors(v1)
         else:
             self._omMatrix = ((*v1, 0), (*v2, 0), (*v3, 0), (*off, 1))
+            
     
     def __repr__(self):
-        return 'KMatrix(v1: {}; v2: {}; v3: {}; off: {})'.format(
-                self.v1, self.v2, self.v3, self.off)
-    
+        return 'KMatrix(\nv1: ({},{}); \nv2: ({},{}); \nv3: ({},{}); \noff: ({},{}))'.format(
+                self.v1, self._omMatrix[3], self.v2, self._omMatrix[7], 
+                self.v3, self._omMatrix[11], self.off, self._omMatrix[-1])
+                
+    def __str__(self):
+        rows = ((*self,)[i:i+4] for i in range(0, 16, 4))
+        return '(({}))'.format(', '.join(str(row) for row in rows))
+
+    def __iter__(self):
+        return (i for i in self._omMatrix)
+        
+
     @property
     def _omMatrix(self) -> om2.MMatrix:
         return self.__omMatrix
@@ -124,8 +132,6 @@ class KMatrix(object):
         '''
         return KMatrix(self._omMatrix.inverse())
         
-    def __iter__(self):
-        return iter(self._omMatrix)
     
     @attrUtils.checkNumberType
     def __getitem__(self, index) -> float:
@@ -214,31 +220,28 @@ class KMatrix(object):
     
     @attrUtils.checkClass
     def __eq__(self, other) -> bool:
-        return self._omMatrix == other._omMatrix
+        #return self._omMatrix == other._omMatrix
+        return self._omMatrix.__eq__(other._omMatrix)
         
     @attrUtils.checkClass
     def __ne__(self, other) -> bool:
-        return self._omMatrix != other._omMatrix
+        return self._omMatrix.__ne__(other._omMatrix)
         
             
 
 if __name__ == '__main__':
     
-    mm = KMatrix()
-    mm[4] = 16
-    mm.v2
-
-    # v1 = KVector(3, 2, 6)
-    # m1 = KMatrix(KVector(5, 6, 5), KVector(5, 8, 5), KVector(0, 4, 2), KVector(7, 4, 2))
-    # m2 = KMatrix(KVector(2, 4, 1), KVector(0, 4, 2), KVector(2, 6, 8), KVector(2, 4, 4))
-    # [*m2]
-    # m3 = KMatrix(m1)
-
+    m1 = KMatrix(KVector(5, 6, 5), KVector(5, 8, 5), KVector(0, 4, 2), KVector(7, 4, 2))
+    m1 *= 2
+    m1._omMatrix
+    m1._omMatrix
     
-    # m1 == m3
-    
+    m2 = KMatrix(m1)
+    m2._omMatrix
+    m2 *=m2
+    m2.normalize()
+    m2._omMatrix
 
-    #m1._omMatrix
 
 
     
