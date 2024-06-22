@@ -7,8 +7,8 @@ import cmdk
 node1 = cmdk.createDagNode('joint')
 node2 = cmdk.createDepNode('network', 'metaNode')
 # 添加一个或一组对象
-node  = cmdk.kNode('pCube1')
-nodes = cmdk.kNode(['pCube1', 'joint1', 'locator1'])
+node  = cmdk.add('pCube1')
+nodes = cmdk.add(['pCube1', 'joint1', 'locator1'])
 ```
 多种获取/设置属性方式 适应不同情况
 ```python
@@ -39,7 +39,7 @@ node2.affectedBy[0].disconnect(False)   # 断开input
 缓存单例模式 
 ```python
 node  = cmdk.createDagNode('joint', 'JNT')
-node2 = cmdk.kNode('JNT')
+node2 = cmdk.add('JNT')
 node == node2       # Result: True #
 cmdk.getCache()     # Result: {'03A1372E-4E6D-3787-FD4E-7597FEBE49BE': <DagNode joint 'JNT'>} #
 
@@ -61,23 +61,23 @@ v2 = om2.MPoint(v1) * m1
 cmds.xform('pCylinder1', t=om2.MVector(v2), ws=True)
 
 import cmdk
-matrix  = cmdk.kNode('pTorus1').getGlobalMatrix()             # 获取全局矩阵
-vec     = cmdk.kNode('pCylinder1_str').getGlobalMatrix().off  # 从全局矩阵分解位移向量
-vec     = cmdk.kNode('pCylinder1_str').getGlobalPos()         # 或者直接获取全局位置
+matrix  = cmdk.add('pTorus1').getGlobalMatrix()             # 获取全局矩阵
+vec     = cmdk.add('pCylinder1_str').getGlobalMatrix().off  # 从全局矩阵分解位移向量
+vec     = cmdk.add('pCylinder1_str').getGlobalPos()         # 或者直接获取全局位置
 # 使用*计算带位移的矩阵向量乘 不考虑左右乘顺序
 # 使用%计算不带位移的矩阵向量乘
 # matrix % vec 或者 vec % matrix, 此时乘法顺序有意义
 vec2    = matrix * vec                                        
 vec2    = vec    * matrix 
-cmdk.kNode('pCylinder1').setGlobalPos(vec2)
+cmdk.add('pCylinder1').setGlobalPos(vec2)
 ```
 和cmds结合使用
 ```python
 import maya.cmds as cmds
 import cmdk
 
-sel = [cmdk.kNode(i) for i in cmds.ls(sl=True)]
-sel = cmdk.kNode(cmds.ls(sl=True))
+sel = [cmdk.add(i) for i in cmds.ls(sl=True)]
+sel = cmdk.add(cmds.ls(sl=True))
 
 for i in sel:
     print(i.fullPath)
