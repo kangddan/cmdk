@@ -63,12 +63,12 @@ class GetAttribute(object):
         from cmdk.dag.dagNode import DagNode
         if self.isMulti:
             nodes = cmds.listConnections(self.fullPath) or []
-            return [DagNode('', node) if omUtils.isDagNode(node) else DepNode('', node) for node in nodes]
+            return [DagNode(nodeName=node) if omUtils.isDagNode(node) else DepNode(nodeName=node) for node in nodes]
             
         nodes = cmds.listConnections(self.fullPath, s=False) or cmds.listConnections(self.fullPath, d=False)
         if nodes is None:
             return
-        return DagNode('', nodes[0]) if omUtils.isDagNode(nodes[0]) else DepNode('', nodes[0])
+        return DagNode(nodeName=nodes[0]) if omUtils.isDagNode(nodes[0]) else DepNode(nodeName=nodes[0])
         
     @property
     def stringData(self):

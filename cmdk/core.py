@@ -18,16 +18,16 @@ def createDagNode(typ: str, name :str = '') -> DagNode:
 def createDepNode(typ: str, name :str = '') -> DepNode:
     return DepNode(typ, name)
     
-def kNode(name: Union[str, tuple, list]) -> DepNode | DagNode:
+def add(name: Union[str, tuple, list]) -> DepNode | DagNode:
     if isinstance(name, str):
         if not cmds.objExists(name):
             raise ValueError('The specified object does not exist: {}'.format(name))
-        return DagNode('', name) if isDagNode(name) else DepNode('', name)
+        return DagNode(nodeName=name) if isDagNode(name) else DepNode(nodeName=name)
     
     elif isinstance(name, (tuple, list)):
         if not all(cmds.objExists(_n) for _n in name):
             raise ValueError('Contains one or more invalid objects: {}'.format(name))
-        return [DagNode('', _n) if isDagNode(_n) else DepNode('', _n) for _n in name]
+        return [DagNode(nodeName=_n) if isDagNode(_n) else DepNode(nodeName=_n) for _n in name]
     else:
          raise ValueError('Invalid input type: {}. Expected str, tuple, or list.'.format(type(name).__name__))
 
@@ -39,3 +39,14 @@ def clearCache() -> None:
     
 def removeFromCache(uuid: str) -> None:
     return DepNode.removeFromCache(uuid)
+    
+def delete(nodes, *args, **kwargs):
+    cmds.delete(str(nodes.lock(False)) if not isinstance(nodes, (tuple, list)) 
+    else (str(n.lock(False)) for n in nodes), *args, **kwargs)
+    
+def ls(*args, **kwargs):
+    nodes = cmds.ls(*args, **kwargs)
+    return [DagNode(nodeName=n) if isDagNode(n) else DepNode(nodeName=n) for n in nodes] 
+
+    
+    

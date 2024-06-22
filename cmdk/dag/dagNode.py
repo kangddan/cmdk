@@ -26,7 +26,7 @@ class DagNode(DepNode):
 
       
     def setVisibility(self, Value):
-        if self.exists():
+        if self.has:
             cmds.setAttr('{0}.visibility'.format(self.fullPath), Value)
                     
     def show(self):
@@ -40,7 +40,7 @@ class DagNode(DepNode):
         '''
         return: [DagNode(shape), ...] or []
         '''
-        return [DagNode('', shape) 
+        return [DagNode(nodeName=shape) 
         for shape in cmds.listRelatives(self.fullPath, s=True, f=True, ni=True) 
         or []]
         '''
@@ -68,13 +68,13 @@ class DagNode(DepNode):
             If the long names are the same, it returns True
             '''
             if child not in self.shape:
-                children.append(DagNode('', child))    
+                children.append(DagNode(nodeName=child))    
                 
         return children
         
     @property
     def allChildren(self):
-        return [DagNode('', child) 
+        return [DagNode(nodeName=child) 
                 for child in cmds.listRelatives(self.fullPath, ad=True, f=True, ni=True) 
                 or []]
     
@@ -82,7 +82,7 @@ class DagNode(DepNode):
     def parent(self):
         parent = cmds.listRelatives(self.fullPath, p=True, f=True)
         if parent:
-            return DagNode('', parent[0])
+            return DagNode(nodeName=parent[0])
             
     @property
     def allParent(self):
@@ -97,6 +97,7 @@ class DagNode(DepNode):
     
     def parentTo(self, item):
         cmds.parent(self.fullPath, str(item))
+        # add shape parent
         
     def parentToWorld(self):
         cmds.parent(self.fullPath, w=True)
@@ -144,6 +145,7 @@ class DagNode(DepNode):
             cmds.xform(self.fullPath, t=[*vactor], ws=False)
         
 if __name__ == '__main__':    
+    # create
     node = DagNode('', 'joint2') 
     #node.shape[0].delete()
 

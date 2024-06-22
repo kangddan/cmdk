@@ -59,7 +59,6 @@ class Attribute(object):
     @property
     def name(self) -> str:
         return '{}.{}'.format(self.nodeName, self._attr)
-        
     
     def get(self, *args, **kwargs):
         return GetAttribute(self.nodeFullPathName, self._attr).run(*args, **kwargs)
@@ -126,10 +125,9 @@ class Attribute(object):
         return bool(self.children)
           
     # -----------------------------------------------------------------   
-    ''' 
-    def exists(self):
+    @property
+    def has(self) -> bool:
         return cmds.objExists(self.fullPath)
-    '''
         
     def query(self, **kwargs):
         '''
@@ -175,10 +173,10 @@ class Attribute(object):
         from cmdk.dag.dagNode import DagNode
         
         if any(key in kwargs and kwargs[key] for key in ['plugs', 'p']):
-            # return [Attribute(DepNode(node.split('.')[0]), '.'.join(node.split('.')[1:])) for node in nodes]
-            return [DepNode('', node.split('.')[0])['.'.join(node.split('.')[1:])] for node in nodes]
+            # return [Attribute(nodeName=DepNode(node.split('.')[0]), '.'.join(node.split('.')[1:])) for node in nodes]
+            return [DepNode(nodeName=node.split('.')[0])['.'.join(node.split('.')[1:])] for node in nodes]
         else:
-            return [DagNode('', node) if omUtils.isDagNode(node) else DepNode('', node) for node in nodes]
+            return [DagNode(nodeName=node) if omUtils.isDagNode(node) else DepNode(nodeName=node) for node in nodes]
             
     
     # ------------------------------------------------------------------------
