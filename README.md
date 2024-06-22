@@ -89,7 +89,7 @@ cmds.rename(sel[0].fullPath, 'abc')
 print(sel[0].fullPath)
 # Result: |abc #
 ```
-字符串属性优先返回对象
+字符串属性优先返回对象 元数据友好
 ```python
 import cmdk
 metaNode = cmdk.createDepNode('network', 'metaRoot')
