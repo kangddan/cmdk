@@ -82,10 +82,7 @@ def alignObjectsCmdk():
     baseVec = [obj.getGlobalPos() for obj in sel[1:-1]]
     offset = (endVec - startVec) / (len(sel)-1)
     # -------------------------------
-    newVec = []
-    newVec.append(startVec)
-    newVec.extend([startVec + offset * (index + 1) for index, v in enumerate(baseVec)]) 
-    newVec.append(endVec)
+    newVec = [startVec, *[startVec + offset * (index + 1) for index, v in enumerate(baseVec)], endVec]
     # -------------------------------
     for index, obj in enumerate(sel):
         obj.setGlobalPos(newVec[index]) 
@@ -105,10 +102,7 @@ def alignObjectsCmds():
     baseVec = [om2.MVector(cmds.xform(obj, q=True, t=True, ws=True)) for obj in sel[1:-1]]
     offset = (endVec - startVec) / (len(sel)-1)
     # -------------------------------
-    newVec = []
-    newVec.append(startVec)
-    newVec.extend([startVec + offset * (index + 1) for index, v in enumerate(baseVec)]) 
-    newVec.append(endVec)
+    newVec = [startVec, *[startVec + offset * (index + 1) for index, v in enumerate(baseVec)], endVec]
     # -------------------------------
     for index, obj in enumerate(sel):
         cmds.xform(obj, t=newVec[index], ws=True)
