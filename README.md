@@ -51,7 +51,7 @@ for i in range(3):
 # 删除全部缓存
 cmdk.clearCache(); cmdk.getCache() # Result: {} #
 ```
-和cmds对比 
+和cmds对比
 ```python
 import maya.api.OpenMaya as om2
 import maya.cmds as cmds
@@ -70,6 +70,50 @@ vec     = cmdk.add('pCylinder1_str').getGlobalPos()         # 或者直接获取
 vec2    = matrix * vec                                        
 vec2    = vec    * matrix 
 cmdk.add('pCylinder1').setGlobalPos(vec2)
+```
+```python
+import cmdk
+
+def alignObjectsCmdk():
+    sel = cmdk.ls(sl=True)
+    if not sel or len(sel) < 3: return
+    startVec = sel[0].getGlobalPos(); endVec = sel[-1].getGlobalPos()
+    # -------------------------------
+    baseVec = [obj.getGlobalPos() for obj in sel[1:-1]]
+    offset = (endVec - startVec) / (len(sel)-1)
+    # -------------------------------
+    newVec = []
+    newVec.append(startVec)
+    newVec.extend([startVec + offset * (index + 1) for index, v in enumerate(baseVec)]) 
+    newVec.append(endVec)
+    # -------------------------------
+    for index, obj in enumerate(sel):
+        obj.setGlobalPos(newVec[index]) 
+        
+alignObjectsCmdk()
+
+# --------------------------------------------------------------------------------------
+import maya.cmds as cmds
+import maya.api.OpenMaya as om2
+
+def alignObjectsCmds():
+    sel = cmds.ls(sl=True)
+    if not sel or len(sel) < 3: return
+    startVec = om2.MVector(cmds.xform(sel[0], q=True, t=True, ws=True))
+    endVec   = om2.MVector(cmds.xform(sel[-1], q=True, t=True, ws=True))
+    # -------------------------------
+    baseVec = [om2.MVector(cmds.xform(obj, q=True, t=True, ws=True)) for obj in sel[1:-1]]
+    offset = (endVec - startVec) / (len(sel)-1)
+    # -------------------------------
+    newVec = []
+    newVec.append(startVec)
+    newVec.extend([startVec + offset * (index + 1) for index, v in enumerate(baseVec)]) 
+    newVec.append(endVec)
+    # -------------------------------
+    for index, obj in enumerate(sel):
+        cmds.xform(obj, t=newVec[index], ws=True)
+    
+alignObjectsCmds()
 ```
 和cmds结合使用
 ```python
