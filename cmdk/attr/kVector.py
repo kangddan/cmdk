@@ -385,7 +385,7 @@ class KVector(object):
         from cmdk.attr.kMatrix import KMatrix
         
         if isinstance(other, (int, float, complex)):
-            return KVector(self.x*other, self.z*other, self.y*other)
+            return KVector(self.x * other, self.y * other, self.z * other)
         elif isinstance(other, self.__class__):
             return self.dot(other)
         elif isinstance(other, KMatrix):
